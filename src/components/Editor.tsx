@@ -73,12 +73,19 @@ function Editor(props: { height?: string; fontSize?: number }) {
 
       const value = ref.current.getValue();
 
-      await localforage.setItem("code", value);
-
       const error = evaluate(value);
 
       if (error !== null) {
         console.error(error);
+      } else {
+        const formatted = await prettier.format(value, {
+          parser: "babel",
+          plugins: [prettierPluginBabel, prettierPluginEstree],
+        });
+
+        await localforage.setItem("code", formatted);
+
+        ref.current.setValue(formatted);
       }
     }
     run();
