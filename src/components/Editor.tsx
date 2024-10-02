@@ -80,6 +80,7 @@ function Editor(props: { height?: string; fontSize?: number }) {
         options={{ minimap: { enabled: false }, fontSize, tabSize: 2 }}
       />
       <div className="absolute bottom-0 right-0 p-4 flex gap-2">
+        <Button id="clear" >Clear</Button>
         <Button onClick={onFormat}>Format</Button>
         <Button onClick={onRun}>Run</Button>
       </div>
