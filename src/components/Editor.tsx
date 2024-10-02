@@ -7,6 +7,16 @@ import React from "react";
 import { createHighlighter } from "shiki";
 import Button from "./Button";
 
+function evaluate(code: string): Error | null {
+  try {
+    eval(code);
+    return null;
+  } catch(error) {
+    return error as Error;
+  }
+}
+
+
 function Editor(props: { height?: string; fontSize?: number }) {
   const { height = "100%", fontSize = 12 } = props;
 
@@ -42,6 +52,23 @@ function Editor(props: { height?: string; fontSize?: number }) {
     }
     format();
   };
+
+  const onRun = () => {
+    async function run() {
+      if (ref.current === null) {
+        return;
+      }
+
+      const value = ref.current.getValue();
+      const error = evaluate(value);
+
+      if (error !== null) {
+        console.error(error);
+      }
+    }
+    run();
+  };
+
   return (
     <div className="relative h-full">
       <MonacoEditor.Editor
@@ -52,8 +79,9 @@ function Editor(props: { height?: string; fontSize?: number }) {
         onMount={onMount}
         options={{ minimap: { enabled: false }, fontSize, tabSize: 2 }}
       />
-      <div className="absolute bottom-0 right-0 p-4">
+      <div className="absolute bottom-0 right-0 p-4 flex gap-2">
         <Button onClick={onFormat}>Format</Button>
+        <Button onClick={onRun}>Run</Button>
       </div>
     </div>
   );
