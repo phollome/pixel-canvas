@@ -6,16 +6,16 @@ import prettierPluginEstree from "prettier/plugins/estree";
 import React from "react";
 import { createHighlighter } from "shiki";
 import Button from "./Button";
+import localforage from "localforage";
 
 function evaluate(code: string): Error | null {
   try {
     eval(code);
     return null;
-  } catch(error) {
+  } catch (error) {
     return error as Error;
   }
 }
-
 
 function Editor(props: { height?: string; fontSize?: number }) {
   const { height = "100%", fontSize = 12 } = props;
@@ -33,6 +33,16 @@ function Editor(props: { height?: string; fontSize?: number }) {
 
   const onMount: MonacoEditor.OnMount = (editor) => {
     ref.current = editor;
+
+    async function load() {
+      const value = await localforage.getItem<string>("code");
+
+      if (value !== null) {
+        editor.setValue(value);
+      }
+    }
+
+    load();
   };
 
   const onFormat = () => {
@@ -48,6 +58,8 @@ function Editor(props: { height?: string; fontSize?: number }) {
         plugins: [prettierPluginBabel, prettierPluginEstree],
       });
 
+      await localforage.setItem("code", formatted);
+
       ref.current.setValue(formatted);
     }
     format();
@@ -60,6 +72,9 @@ function Editor(props: { height?: string; fontSize?: number }) {
       }
 
       const value = ref.current.getValue();
+
+      await localforage.setItem("code", value);
+
       const error = evaluate(value);
 
       if (error !== null) {
@@ -80,7 +95,7 @@ function Editor(props: { height?: string; fontSize?: number }) {
         options={{ minimap: { enabled: false }, fontSize, tabSize: 2 }}
       />
       <div className="absolute bottom-0 right-0 p-4 flex gap-2">
-        <Button id="clear" >Clear</Button>
+        <Button id="clear">Clear</Button>
         <Button onClick={onFormat}>Format</Button>
         <Button onClick={onRun}>Run</Button>
       </div>
