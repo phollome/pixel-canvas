@@ -1,12 +1,12 @@
 import * as MonacoEditor from "@monaco-editor/react";
 import { shikiToMonaco } from "@shikijs/monaco";
+import localforage from "localforage";
 import * as prettier from "prettier";
 import prettierPluginBabel from "prettier/plugins/babel";
 import prettierPluginEstree from "prettier/plugins/estree";
 import React from "react";
 import { createHighlighter } from "shiki";
 import Button from "./Button";
-import localforage from "localforage";
 
 function evaluate(code: string): Error | null {
   try {
@@ -42,7 +42,26 @@ function Editor(props: { height?: string; fontSize?: number }) {
       }
     }
 
+    let timeout: ReturnType<typeof setTimeout>;
+    function handleBlurEditor() {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        if (ref.current === null) {
+          return;
+        }
+        localforage.setItem("code", ref.current.getValue());
+      }, 1000);
+    }
+
     load();
+
+    ref.current.onDidBlurEditorText(handleBlurEditor);
+    return () => {
+      if (ref.current === null) {
+        return;
+      }
+      ref.current.dispose();
+    };
   };
 
   const onFormat = () => {
